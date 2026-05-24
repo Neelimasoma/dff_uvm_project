@@ -1,0 +1,62 @@
+class dff_coverage extends uvm_subscriber#(dff_txn);
+  `uvm_component_utils(dff_coverage)
+  dff_txn req;
+
+  uvm_analysis_imp#(dff_txn,dff_coverage)cov_imp;
+
+  function new(string name="dff_coverage",uvm_component parent=null);
+    super.new(name,parent);
+    cov_imp=new("cov_imp",this);
+    dff_cg=new();
+  endfunction
+
+  covergroup dff_cg;
+    option.per_instance=1;
+    // Cover input d
+    D_CP : coverpoint req.d {
+      bins d_0 = {0};
+      bins d_1 = {1};
+    }
+
+    // Cover output q
+    Q_CP : coverpoint req.q {
+      bins q_0 = {0};
+      bins q_1 = {1};
+    }
+
+    // Cover reset
+    RST_CP : coverpoint req.rst_n {
+      bins reset_active   = {0};
+      bins reset_inactive = {1};
+    }
+    // cover transition 0 to 1 and 1 to 0
+    D_TRANS : coverpoint req.d {
+      bins d_toggle[] = (0=>1),(1=>0);
+    }
+
+    DQ_CROSS:cross Q_CP,RST_CP,D_CP{
+      ignore_bins invalid_bin =
+      binsof(RST_CP.reset_active) &&
+      binsof(Q_CP.q_1);
+    }
+
+  endgroup
+
+  function void report_phase(uvm_phase phase);
+
+    `uvm_info(get_type_name(),
+              $sformatf("Functional Coverage = %0.2f%%",
+                        dff_cg.get_coverage()),
+              UVM_LOW);
+
+  endfunction
+
+  // Sampling function
+  function void write(dff_txn t);
+
+    req = t;
+    dff_cg.sample();
+
+  endfunction
+
+endclass

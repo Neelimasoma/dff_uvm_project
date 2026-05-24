@@ -1,0 +1,19 @@
+class dff_txn extends uvm_sequence_item;
+
+  rand bit d;  //input of dflipflop
+  bit q;   //output from dflipflop
+  bit rst_n;
+  `uvm_object_utils(dff_txn)
+
+  function new(string name="dff_txn");
+    super.new(name);
+  endfunction
+
+  constraint c1{
+    d dist{0:=50,1:=50};
+  }
+
+  function string convert2string();
+    return $sformatf("d=%0b expected q=%0b",d,q);
+  endfunction
+endclass
